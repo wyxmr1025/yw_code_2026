@@ -1,0 +1,67 @@
+global:
+  time_zone: "Asia/Shanghai" # 设置gitlab时区
+  edition: ce # 设置gitlab版本 ce:社区版 ee:企业版
+
+  hosts:
+    domain: mr5.com # 配置根域名，用于gitlab生成（gitlab.mr5.com, kas.mr5.com, minio.mr5.com）
+    https: false # 是否启用https访问，关闭 https
+
+  ingress:
+    configureCertmanager: false
+    provider: nginx
+    class: nginx
+    enabled: true
+    tls:
+      enabled: false # 是否开启tls
+
+  minio:
+    enabled: true
+    # persistence:
+    #   enabled: true
+    #   storageClass: nfs-client  # 无效
+    #   size: 10Gi
+
+# certmanager-issuer: # 证书生成所使用的邮箱
+#   email: mr56022@163.com
+
+certmanager:
+  installCRDs: false
+  nameOverride: certmanager
+  install: false
+  rbac:
+    create: true
+
+nginx-ingress: &nginx-ingress
+  enabled: false
+
+prometheus:
+  install: false
+
+redis:
+  install: true
+  global:
+    storageClass: nfs-client
+
+postgresql:
+  install: true
+  global:
+    storageClass: nfs-client
+
+gitlab-runner:
+  install: false
+
+gitlab:
+  gitaly:
+    persistence:
+      enabled: true
+      storageClass: nfs-client
+      size: 10Gi
+  kas:
+    minReplicas: 1
+  gitlab-shell:
+    minReplicas: 1
+  webservice:
+    minReplicas: 1
+
+registry:
+  enabled: false

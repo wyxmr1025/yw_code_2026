@@ -1,0 +1,119 @@
+##############
+# For JH only #
+##############
+
+stages:
+- test
+- release
+- post-release
+
+default:
+  image: registry.jihulab.com/jihulab/jh-infra/ci-images/gitlab-runner-chart:kubectl-v1.20.4-kind-v0.11.1-helm3-3.9.4
+
+include:
+  - local: .gitlab-ci.yml
+
+.if_jh_merge_request_pipeline: &if_jh_merge_request_pipeline
+  if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+.if_jh_default_branch: &if_jh_default_branch
+  if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+.if_jh_stable_release_branch: &if_jh_stable_release_branch
+  if: $CI_COMMIT_REF_NAME =~ /\A[0-9]+-[0-9]+-stable-jh\z/
+
+.if_jh_release_tag: &if_jh_release_tag
+  if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+-jh+(-rc[0-9]+)?/ && $CI_PROJECT_URL == "https://jihulab.com/gitlab-cn/charts/gitlab-runner"'
+
+.rules:default:
+  rules:
+  - <<: *if_jh_merge_request_pipeline
+  - <<: *if_jh_default_branch
+  - <<: *if_jh_stable_release_branch
+  - <<: *if_jh_release_tag
+
+.rules:release:development:
+  rules:
+    - <<: *if_jh_default_branch
+      when: never
+    - <<: *if_jh_merge_request_pipeline
+      when: manual
+  needs:
+    - wait-for-images
+
+.rules:release:beta:
+  rules:
+    - <<: *if_jh_default_branch
+  needs:
+    - wait-for-images
+
+.rules:release:stable:
+  rules:
+    - <<: *if_jh_release_tag
+  needs:
+    - wait-for-images
+
+wait-for-images:
+  stage: test
+  extends:
+    - .rules:default
+  image: docker:dind
+  services:
+    - docker:dind
+  script:
+    - |
+      # Get docker image from Chart.appVersion
+      export IMAGE_TAG=`cat Chart.yaml | grep appVersion | awk -F" " '{print $2}'`
+      if [ $IMAGE_TAG != "bleeding" ]; then
+        export IMAGE_TAG=v$IMAGE_TAG
+      fi
+      docker pull "gitlab/gitlab-runner:alpine-$IMAGE_TAG"
+      echo "$TCR_REGISTRY_PASSWORD" | docker login "$TCR_REGISTRY" --username "$TCR_REGISTRY_USER" --password-stdin
+      docker tag "gitlab/gitlab-runner:alpine-$IMAGE_TAG" "$TCR_REGISTRY/jihulab/gitlab-runner:alpine-$IMAGE_TAG"
+      docker push "$TCR_REGISTRY/jihulab/gitlab-runner:alpine-$IMAGE_TAG"
+
+release stable:
+  stage: release
+  variables:
+    CHART_NAME: $CI_PROJECT_NAME
+    RELEASE_REF: $CI_COMMIT_REF_NAME
+    UNSTABLE: 'false'
+  image: registry.jihulab.com/jihulab/jh-infra/ci-images/gitlab-runner-chart:kubectl-v1.20.4-kind-v0.11.1-helm3-3.9.4
+  script:
+    - curl --fail-with-body
+         --request POST
+         --form "token=$CI_JOB_TOKEN"
+         --form ref=main
+         --form "variables[CHART_NAME]=$CI_PROJECT_NAME"
+         --form "variables[RELEASE_REF]=$CI_COMMIT_REF_NAME"
+         --form "variables[UNSTABLE]=$UNSTABLE"
+         https://jihulab.com/api/v4/projects/13319/trigger/pipeline
+  rules:
+  - <<: *if_jh_release_tag
+    when: manual
+  needs:
+    - wait-for-images
+
+release beta:
+  rules:
+    - when: never
+
+trigger charts update:
+  rules:
+    - when: never
+
+integration test:
+  image: registry.jihulab.com/jihulab/jh-infra/ci-images/gitlab-runner-chart:kubectl-v1.20.4-kind-v0.11.1-helm3-3.9.4
+  script:
+      # Initialize KIND cluster
+    - kind create cluster --config=$(pwd)/scripts/kind-config.yaml
+    - kind get kubeconfig|sed -e 's/0.0.0.0/kubernetes/g' > kubeconfig.yaml
+    - export KUBECONFIG=$(pwd)/kubeconfig.yaml
+    - kubectl version
+    - kubectl cluster-info
+    - bash -c "for _i in {0..60}; do kubectl -n default get serviceaccount default -o name > /dev/null 2>&1 && break; sleep 1; done"
+    - bash -c "for _i in {0..60}; do kubectl get nodes|grep -w Ready > /dev/null 2>&1 && break; sleep 1; done"
+    # Run tests
+    - bash -x scripts/integration.sh
+  needs:
+    - wait-for-images

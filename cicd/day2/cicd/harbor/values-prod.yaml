@@ -1,0 +1,81 @@
+externalURL: https://harbor.mr5.com
+harborAdminPassword: Harbor12345
+logLevel: debug
+
+expose:
+  type: ingress
+  tls:
+    enabled: true
+  ingress:
+    className: nginx # 指定 ingress class
+    hosts:
+      core: harbor.mr5.com
+      notary: notary.mr5.com
+
+persistence:
+  enabled: true
+  resourcePolicy: 'keep'
+  persistentVolumeClaim:
+    registry:
+      # 如果需要做高可用，多个副本的组件则需要使用支持 ReadWriteMany 的后端
+      # 这里我们使用nfs，生产环境不建议使用nfs
+      storageClass: 'nfs-client'
+      # 如果是高可用的，多个副本组件需要使用 ReadWriteMany，默认为 ReadWriteOnce
+      accessMode: ReadWriteMany
+      size: 5Gi
+    chartmuseum:
+      storageClass: 'nfs-client'
+      accessMode: ReadWriteMany
+      size: 5Gi
+    jobservice:
+      jobLog:
+        storageClass: 'nfs-client'
+        accessMode: ReadWriteMany
+      size: 1Gi
+    trivy:
+      storageClass: 'nfs-client'
+      accessMode: ReadWriteMany
+      size: 2Gi
+    redis:
+      storageClass: 'nfs-client'
+      accessMode: ReadWriteMany
+      size: 2Gi
+    database:
+      storageClass: 'nfs-client'
+      accessMode: ReadWriteMany
+      size: 8Gi
+
+database:
+  type: internal
+  internal:
+    image:
+      repository: goharbor/harbor-db
+      tag: v2.9.0
+      password: "changeit"
+      shmSizeLimit: 512Mi
+redis:
+  type: internal
+  internal:
+    image:
+      repository: goharbor/redis-photon
+      tag: v2.9.0
+
+
+# 默认为一个副本，如果要做高可用，只需要设置为 replicas >= 2 即可
+portal:
+  replicas: 1
+core:
+  replicas: 1
+jobservice:
+  replicas: 1
+registry:
+  replicas: 1
+chartmuseum:
+  replicas: 1
+trivy:
+  replicas: 1
+notary:
+  server:
+    replicas: 1
+  signer:
+    replicas: 1
