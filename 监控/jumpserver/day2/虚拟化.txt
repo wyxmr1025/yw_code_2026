@@ -1,0 +1,38 @@
+虚拟化
+	kvm
+	xen
+	服务进程   libvirtd  
+	客户端工具  qemu
+			   virt-manager
+			   virsh
+			   virt-install
+	创建磁盘镜像 
+				qemu-img 
+
+	安装服务端，客户端，镜像工具  
+		yum install libvirt* virt-* qemu-kvm*
+
+	启动libvirtd 服务进程
+		systemctl  start libvirtd  
+	创建带光盘镜像虚拟机
+		virt-install --name vm-1 --virt-type kvm --vcpus 1 --memory 1024 --cdrom /path/to/CentOS-7-x86_64-Minimal-2009.iso --disk path=/path/to/disk.qcow2,size=10,format=qcow2 --network network=default --graphics vnc,port=5900,listen=0.0.0.0 --os-type linux --os-variant centos7.0 --noautoconsole
+	创建一个已经装好系统桥接模型
+		virt-install --name vm-2 --virt-type kvm --vcpus 1 --memory 2048 --disk path=/path/to/disk.qcow2,size=10,format=qcow2 --network bridge=br0 --graphics vnc,port=-1,listen=0.0.0.0 --os-type windows --os-variant win7 --noautoconsole
+	virsh: 虚拟机管理命令 
+		virsh list 列出虚拟机  
+				  --all 
+			  start  启动
+			  shutdown 关闭
+			  destroy  强制关闭 
+			  suspend  挂起
+			  resume   恢复
+			  autostart 让虚拟机自动启动
+			  undefine
+			  autostart
+			  snapshot  快照 
+	使用virt-manager 管理虚拟机   
+
+	热迁移： 
+			1： 共享存储实现镜像文件共享 
+			2： 主机需要基于名称解析 
+		迁移命令: virsh migrate vm-2  qemu+ssh://192.168.237.192/system --live --unsafe

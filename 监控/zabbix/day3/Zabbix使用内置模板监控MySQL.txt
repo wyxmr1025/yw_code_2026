@@ -1,0 +1,53 @@
+#!/bin/bash
+# 自动配置 Zabbix Agent 监控 MySQL，适用于 yum 安装环境
+
+# 👉 你可在这里修改账号密码
+ZBX_DB_USER="zabbix"
+ZBX_DB_PASS="123"
+ZBX_DB_HOST="localhost"
+ZBX_DB_PORT=3306
+
+echo "🔐 正在创建 MySQL 用户并授权（需本机已有 root 权限）..."
+mysql -uroot -p <<EOF
+CREATE USER IF NOT EXISTS '${ZBX_DB_USER}'@'${ZBX_DB_HOST}' IDENTIFIED BY '${ZBX_DB_PASS}';
+GRANT REPLICATION CLIENT, PROCESS, SHOW DATABASES, SHOW VIEW ON *.* TO '${ZBX_DB_USER}'@'${ZBX_DB_HOST}';
+FLUSH PRIVILEGES;
+EOF
+
+if [ $? -ne 0 ]; then
+  echo "❌ 创建 MySQL 用户失败，请确认 root 密码或手动执行创建语句。"
+  exit 1
+fi
+
+echo "✅ MySQL 用户创建成功：${ZBX_DB_USER}@${ZBX_DB_HOST}"
+
+echo "📁 创建 /var/lib/zabbix/.my.cnf 文件..."
+cat > /var/lib/zabbix/.my.cnf <<EOF
+[client]
+user=${ZBX_DB_USER}
+password=${ZBX_DB_PASS}
+EOF
+
+chown zabbix:zabbix /var/lib/zabbix/.my.cnf
+chmod 600 /var/lib/zabbix/.my.cnf
+echo "✅ .my.cnf 已写入并授权"
+
+echo "🛠️ 写入 UserParameter 到 /etc/zabbix/zabbix_agentd.d/mysql_custom.conf ..."
+cat > /etc/zabbix/zabbix_agentd.d/mysql_custom.conf <<EOF
+UserParameter=mysql.ping[*], HOME=/var/lib/zabbix /usr/bin/mysqladmin -h"\$1" -P"\$2" ping
+UserParameter=mysql.get_status_variables[*], HOME=/var/lib/zabbix /usr/bin/mysql -h"\$1" -P"\$2" -sNX -e "show global status"
+UserParameter=mysql.version[*], HOME=/var/lib/zabbix /usr/bin/mysqladmin -s -h"\$1" -P"\$2" version
+UserParameter=mysql.db.discovery[*], HOME=/var/lib/zabbix /usr/bin/mysql -h"\$1" -P"\$2" -sN -e "show databases"
+UserParameter=mysql.dbsize[*], HOME=/var/lib/zabbix /usr/bin/mysql -h"\$1" -P"\$2" -sN -e "SELECT COALESCE(SUM(DATA_LENGTH + INDEX_LENGTH),0) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='\$3'"
+UserParameter=mysql.replication.discovery[*], HOME=/var/lib/zabbix /usr/bin/mysql -h"\$1" -P"\$2" -sNX -e "show slave status"
+UserParameter=mysql.slave_status[*], HOME=/var/lib/zabbix /usr/bin/mysql -h"\$1" -P"\$2" -sNX -e "show slave status"
+EOF
+
+echo "🔄 重启 zabbix-agent..."
+systemctl restart zabbix-agent
+
+echo "✅ 所有配置完成！"
+
+echo ""
+echo "✅ 请在 Zabbix Server 上测试连接命令："
+echo "   zabbix_get -s <Agent_IP> -p 10050 -k mysql.ping[127.0.0.1,${ZBX_DB_PORT}]"
