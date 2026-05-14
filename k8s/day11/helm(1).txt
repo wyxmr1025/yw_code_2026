@@ -1,0 +1,92 @@
+deployment 
+svc
+ingress
+pvc
+rbac
+
+yum
+
+
+helm 模板--->values  
+	类似于 centos中yum包管理工具  
+
+模板 --->配置清单文件---->apply ---->  relases
+		  install
+		  uninsall ---->delete       
+chart  --->  relases
+常用命令
+	helm repo add stable http://mirror.azure.cn/kubernetes/charts/
+	helm repo list
+	helm repo update
+	helm install stable/mysql --generate-name 
+	helm uninstall 
+	helm show values  查看当前char values 
+	helm install -f config.yaml
+	helm upgrade -f config.yaml mysql stable/mysql
+	helm get values mysql
+	helm history mysql
+	helm rollback
+
+chart 
+	apiVersion 字段 helm 的版本  
+	appVersion 字段 指定chart 的版本 
+	dependencies 字段 
+
+预定义 Values 
+	Release.Name：release 的名称
+	Release.Namespace：release 被安装到的命名空间
+
+
+helm install --generate-name --dry-run --debug ./mychart
+
+https://www.zhangbj.com/p/1251.html
+常用函数  
+	 quote
+	 | : 管道  
+	 repeat： 重复次数 {{ .Values.favorite.drink | repeat 5 | quote }}
+	 default： 函数 
+
+流程控制语句 
+{{ if PIPELINE }}
+  # Do something
+{{ else if OTHER PIPELINE }}
+  # Do something else
+{{ else }}
+  # Default case
+{{ end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  myvalue: "Hello World"
+  drink: {{ .Values.favorite.drink | default "tea" | quote }}
+  food: {{ .Values.favorite.food | upper | quote }}
+  {{ if eq .Values.favorite.drink "coffee" }}mug: true{{ end }}
+{{- 添加了破折号和空格表示应将左边的空格移除，-}}表示将右边的空格移除
+{{ indent 2 "mug: true" }}
+
+使用 with 修改作用域
+
+{{ with PIPELINE }}
+  # 限制范围
+{{ end }}
+
+{{- with .Values.favorite }}
+  drink: {{ .drink | default "tea" | quote }}
+  food: {{ .food | upper | quote }}
+  {{- end }}
+
+
+{{- rang  }}
+
+
+1: 使用helm 部署一个应用(book-mamangent)
+2: 包括 deployment，service ,ingress(enable:true)
+
+
+
+
+
+

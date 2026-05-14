@@ -1,0 +1,104 @@
+hpa 水平扩展 
+1： 安装 metric-server  
+- --kubelet-insecure-tls
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hpa-demo
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: 50Mi
+            cpu: 50m
+
+kubectl autoscale deployment hpa-demo --cpu-percent=10 --min=1 --max=10
+
+
+# hpa-mem-demo.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hpa-mem-demo
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      volumes:
+        - name: increase-mem-script
+          configMap:
+            name: increase-mem-config
+      containers:
+        - name: nginx
+          image: nginx:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: increase-mem-script
+              mountPath: /etc/script
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 50m
+          securityContext:
+            privileged: true
+
+
+# increase-mem-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: increase-mem-config
+data:
+  increase-mem.sh: |
+    #!/bin/bash
+    mkdir /tmp/memory
+    mount -t tmpfs -o size=40M tmpfs /tmp/memory
+    dd if=/dev/zero of=/tmp/memory/block
+    sleep 60
+    rm /tmp/memory/block
+    umount /tmp/memory
+    rmdir /tmp/memory
+
+
+
+# hpa-mem.yaml
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-mem-demo
+  namespace: default
+spec:
+  maxReplicas: 5
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hpa-mem-demo
+  metrics: # 指定内存的一个配置
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: 30
+
+        

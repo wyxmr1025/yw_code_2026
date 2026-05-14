@@ -1,0 +1,187 @@
+k8s调度策略 
+	1：预选过程，过滤掉不满足条件的节点，这个过程称为 Predicates
+	2：优选过程，对通过的节点按照优先级排序，称之为 Priorities（打分）
+nodeSelector 
+	# node-selector-demo.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: busybox-pod
+  name: test-busybox
+spec:
+  containers:
+  - command:
+    - sleep
+    - "3600"
+    image: busybox
+    imagePullPolicy: Always
+    name: test-busybox
+  nodeSelector:
+    com: mr5
+
+亲和性：
+  软策略就是如果现在没有满足调度要求的节点的话，Pod就会忽略这条规则，继续完成调度过程，说白了就是满足条件最好了，没有的话也无
+  硬策略就比较强硬了，如果没有满足条件的节点的话，就不断重试直到满足条件为止，简单说就是你必须满足我的要求，不然就不干
+
+# node-affinity-demo.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-affinity
+  labels:
+    app: node-affinity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-affinity
+  template:
+    metadata:
+      labels:
+        app: node-affinity
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: nginxweb
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:  # 硬策略
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - node3.mr5.com
+          preferredDuringSchedulingIgnoredDuringExecution:  # 软策略
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: com
+                operator: In
+                values:
+                - mr5 
+
+
+---
+pod亲和性 
+# pod-affinity-demo.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-affinity
+  labels:
+    app: pod-affinity
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pod-affinity
+  template:
+    metadata:
+      labels:
+        app: pod-affinity
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+          name: nginxweb
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:  # 硬策略
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - busybox-pod
+            topologyKey: kubernetes.io/hostname
+
+
+pod 反亲和性 
+# pod-antiaffinity-demo.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-antiaffinity
+  labels:
+    app: pod-antiaffinity
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pod-antiaffinity
+  template:
+    metadata:
+      labels:
+        app: pod-antiaffinity
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: nginxweb
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:  # 硬策略
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - busybox-pod
+            topologyKey: kubernetes.io/hostname
+
+
+污点与容忍度 
+NoSchedule ：表示 k8s 将不会将 Pod 调度到具有该污点的 Node 上。
+
+PreferNoSchedule ：表示 k8s 将尽量避免将 Pod 调度到具有该污点的 Node 上。
+
+NoExecute ：表示 k8s 将不会将 Pod 调度到具有该污点的 Node 上，同时会将 Node 上已经存在的 Pod 驱逐出去
+
+kubectl taint nodes node01 key1=value1:NoSchedule
+kubectl taint nodes node2 test=node2:NoSchedule
+----容忍master------
+# taint-demo.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taint
+  labels:
+    app: taint
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: taint
+  template:
+    metadata:
+      labels:
+        app: taint
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - name: http
+          containerPort: 80
+      t
+
+对于 tolerations 属性的写法，其中的 key、value、effect 与 Node 的 Taint 设置需保持一致， 还有以下几点说明：
+
+如果 operator 的值是 Exists，则 value 属性可省略
+如果 operator 的值是 Equal，则表示其 key 与 value 之间的关系是 equal(等于)
+如果不指定 operator 属性，则默认值为 Equal
+另外，还有两个特殊值：
+
+空的 key 如果再配合 Exists 就能匹配所有的 key 与 value，也就是是能容忍所有节点的所有 Taints
+空的 effect 匹配所有的 effect

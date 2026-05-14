@@ -1,0 +1,279 @@
+Prometheus Operator
+ 	1: 安装： 
+
+ 监控规则  
+
+
+
+ # kubernetesControlPlane-serviceMonitorKubeScheduler.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/name: kube-scheduler
+    app.kubernetes.io/part-of: kube-prometheus
+  name: kube-scheduler
+  namespace: monitoring
+spec:
+  endpoints:
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      interval: 30s # 每30s获取一次信息
+      port: https-metrics # 对应 service 的端口名
+      scheme: https # 注意是使用 https 协议
+      tlsConfig:
+        insecureSkipVerify: true 
+  jobLabel: app.kubernetes.io/name # 用于从中检索任务名称的标签
+  namespaceSelector: # 表示去匹配某一命名空间中的 Service，如果想从所有的namespace中匹配用any:true
+    matchNames:
+      - kube-system
+  selector: # 匹配的 Service 的 labels，如果使用 mathLabels，则下面的所有标签都匹配时才会匹配该 service，如果使用 matchExpressions，则至少匹配一个标签的 service 都会被选择
+    matchLabels:
+      app.kubernetes.io/name: kube-scheduler
+
+---
+配置对应的svc 
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kube-system
+  name: kube-scheduler
+  labels: # 必须和上面的 ServiceMonitor 下面的 matchLabels 保持一致
+    app.kubernetes.io/name: kube-scheduler
+spec:
+  selector:
+    component: kube-scheduler
+  ports:
+    - name: https-metrics
+      port: 10259
+      targetPort: 10259 # 需要注意现在版本默认的安全端口是10259
+
+
+修改静态pod资源  
+
+
+
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd-k8s
+  namespace: kube-system
+  labels:
+    k8s-app: etcd
+spec:
+  type: ClusterIP
+  clusterIP: None # 一定要设置 clusterIP:None
+  ports:
+    - name: port
+      port: 2381
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: etcd-k8s
+  namespace: kube-system
+  labels:
+    k8s-app: etcd
+subsets:
+  - addresses:
+      - ip: x.x.x.x 
+        nodeName: etc-master
+    ports:
+      - name: port
+        port: 2381
+
+
+
+dashbord 3070 etcd  
+
+
+
+
+
+--- 
+promethuesrule 
+
+
+$ cat kubePrometheus-prometheusRule.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: kube-prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    prometheus: k8s
+    role: alert-rules
+  name: kube-prometheus-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: general.rules
+    rules:
+    - alert: TargetDown
+      annotations:
+        description: '{{ printf "%.4g" $value }}% of the {{ $labels.job }}/{{ $labels.service
+          }} targets in {{ $labels.namespace }} namespace are down.'
+        runbook_url: https://runbooks.prometheus-operator.dev/runbooks/general/targetdown
+        summary: One or more targets are unreachable.
+      expr: 100 * (count(up == 0) BY (job, namespace, service) / count(up) BY (job,
+        namespace, service)) > 10
+      for: 10m
+      labels:
+        severity: warning
+
+
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: mem-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: "load too high"
+      rules:
+        - alert: "内存过高"
+          annotations:
+            summary: "节点 {{ $labels.instance }} 内存过高"
+            description: "{{ $labels.instance }} of job {{ $labels.job }} 内存过高超过1分钟."
+          expr: 100 * (1 - ((avg_over_time(node_memory_MemFree_bytes[1h]) + avg_over_time(node_memory_Cached_bytes[1h]) + avg_over_time(node_memory_Buffers_bytes[1h])) / avg_over_time(node_memory_MemTotal_bytes[1h]))) > 20
+          for: 1m
+          labels:
+            team: node
+
+
+
+AlertmanagerConfig
+---
+# alertmanager-config.yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: dinghook
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: example
+spec:
+  receivers:
+    - name: dingding
+      webhookConfigs:
+        - url: http://dingding:8080/alertmanager/webhook
+          sendResolved: true
+  route:
+    groupBy: ['instance']
+    groupWait: 30s
+    groupInterval: 30s
+    repeatInterval: 1m
+    receiver: dingding
+    matchers:
+    - name: team 
+      value: node
+
+
+
+alertmanagerConfig: example
+
+
+自定义发现规则  
+
+- job_name: 'endpoints'
+  kubernetes_sd_configs:
+    - role: endpoints
+  relabel_configs: # 指标采集之前或采集过程中去重新配置
+    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+      action: keep # 保留具有 prometheus.io/scrape=true 这个注解的Service
+      regex: true
+    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels:
+        [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+      action: replace
+      target_label: __address__
+      regex: ([^:]+)(?::\d+)?;(\d+) # RE2 正则规则，+是一次多多次，?是0次或1次，其中?:表示非匹配组(意思就是不获取匹配结果)
+      replacement: $1:$2
+    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+      action: replace
+      target_label: __scheme__
+      regex: (https?)
+    - action: labelmap
+      regex: __meta_kubernetes_service_label_(.+)
+      replacement: $1
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: kubernetes_namespace
+    - source_labels: [__meta_kubernetes_service_name]
+      action: replace
+      target_label: kubernetes_service
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: kubernetes_pod
+    - source_labels: [__meta_kubernetes_node_name]
+      action: replace
+      target_label: kubernetes_node
+
+kubectl create secret generic additional-configs --from-file=prometheus-additional.yaml -n monitoring
+
+ additionalScrapeConfigs:
+    name: additional-configs
+    key: prometheus-additional.yaml
+
+
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/instance: k8s
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.35.0
+  name: prometheus-k8s
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - nodes
+      - services
+      - endpoints
+      - pods
+      - nodes/proxy
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+      - nodes/metrics
+    verbs:
+      - get
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+
+
+
+
+数据持久化: 
+
+
+storage:
+  volumeClaimTemplate:
+    spec:
+      storageClassName: local-storage
+      resources:
+        requests:
+          storage: 10Gi
