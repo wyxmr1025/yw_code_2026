@@ -1,0 +1,215 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+)
+
+// Alertmanager webhook 数据结构
+type AlertManagerWebhook struct {
+	Alerts []struct {
+		Labels      map[string]string `json:"labels"`
+		Annotations map[string]string `json:"annotations"`
+		StartsAt    string            `json:"startsAt"`
+		EndsAt      string            `json:"endsAt"`
+	} `json:"alerts"`
+}
+
+// 钉钉机器人消息结构
+type DingTalkMessage struct {
+	MsgType string `json:"msgtype"`
+
+	Markdown struct {
+		Title string `json:"title"`
+		Text  string `json:"text"`
+	} `json:"markdown"`
+}
+
+func main() {
+
+	// 获取钉钉 webhook URL
+	dingTalkWebhookURL := os.Getenv("DURL")
+
+	if dingTalkWebhookURL == "" {
+		log.Fatal("系统环境变量 DURL 未设置，请设置钉钉机器人 Webhook URL")
+		return
+	}
+
+	// 创建 gin 路由
+	r := gin.Default()
+
+	// Alertmanager webhook 接口
+	r.POST("/alertmanager/webhook", func(c *gin.Context) {
+
+		var webhookData AlertManagerWebhook
+
+		// 解析 JSON
+		if err := c.ShouldBindJSON(&webhookData); err != nil {
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+
+			return
+		}
+
+		// 拼接 markdown 内容
+		var markdownContent string
+
+		for _, alert := range webhookData.Alerts {
+
+			markdownContent += fmt.Sprintf(
+				"### Prometheus 告警\n",
+			)
+
+			markdownContent += fmt.Sprintf(
+				"- 告警开始时间：%s\n",
+				alert.StartsAt,
+			)
+
+			markdownContent += fmt.Sprintf(
+				"- 告警结束时间：%s\n",
+				alert.EndsAt,
+			)
+
+			markdownContent += fmt.Sprintf(
+				"- Labels：\n```json\n%v\n```\n",
+				alert.Labels,
+			)
+
+			markdownContent += fmt.Sprintf(
+				"- Annotations：\n```json\n%v\n```\n",
+				alert.Annotations,
+			)
+
+			markdownContent += "\n"
+		}
+
+		// 可选图片
+		markdownContent += "![Prometheus](https://prometheus.io/assets/prometheus_logo_grey.svg)\n"
+
+		// 构建钉钉消息
+		var dingTalkMessage DingTalkMessage
+
+		dingTalkMessage.MsgType = "markdown"
+
+		dingTalkMessage.Markdown.Title = "Prometheus 告警"
+
+		dingTalkMessage.Markdown.Text = markdownContent
+
+		// 发送到钉钉
+		if err := sendToDingTalk(
+			dingTalkWebhookURL,
+			dingTalkMessage,
+		); err != nil {
+
+			log.Printf("发送钉钉失败: %v", err)
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "无法发送消息到钉钉",
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "成功发送消息到钉钉",
+		})
+	})
+
+	// 启动服务
+	if err := r.Run(":8080"); err != nil {
+
+		log.Fatalf("无法启动 Web 服务器: %v", err)
+	}
+}
+
+// 发送消息到钉钉
+func sendToDingTalk(
+	webhookURL string,
+	message DingTalkMessage,
+) error {
+
+	// 转 JSON
+	messageJSON, err := json.Marshal(message)
+
+	if err != nil {
+		return err
+	}
+
+	// POST 请求
+	resp, err := http.Post(
+		webhookURL,
+		"application/json",
+		bytes.NewBuffer(messageJSON),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	log.Printf("钉钉返回: %s\n", string(body))
+
+	// 检查状态码
+	if resp.StatusCode != http.StatusOK {
+
+		return fmt.Errorf(
+			"非预期响应状态码: %d",
+			resp.StatusCode,
+		)
+	}
+
+	return nil
+}
+
+#linux
+export DURL="https://oapi.dingtalk.com/robot/send?access_token=xxx"
+运行：go run main.go
+# curl测试：
+curl -X POST http://localhost:8080/alertmanager/webhook \
+-H "Content-Type: application/json" \
+-d '
+{
+  "alerts": [
+    {
+      "labels": {
+        "status": "firing",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "Pod restart too many times",
+        "description": "pod restart > 5"
+      },
+      "startsAt": "2026-05-17T10:00:00Z",
+      "endsAt": "2026-05-17T11:00:00Z"
+    }
+  ]
+}'
+#钉钉收到效果
+Prometheus 告警
+
+告警开始时间：2026-05-17T10:00:00Z
+告警结束时间：2026-05-17T11:00:00Z
+
+Labels:
+{
+ status:firing
+ severity:critical
+}
+
+Annotations:
+{
+ summary:Pod restart too many times
+ description:pod restart > 5
+}
