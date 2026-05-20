@@ -1,0 +1,102 @@
+chroot #锁定运行目录
+deamon #以守护进程运行
+user, group, uid, gid  #运行haproxy的用户身份
+nbproc   n #开启的haproxy worker 进程数，默认进程数是一个
+cpu-map 1 0   #绑定haproxy worker 进程至指定CPU，将第1个work进程绑定至0号CPU
+cpu-map 2 1     #绑定haproxy worker 进程至指定CPU，将第2个work进程绑定至1号CPU
+maxconn n   #每个haproxy进程的最大并发连接数
+maxsslconn n   #每个haproxy进程ssl最大连接数,用于haproxy配置了证书的场景下
+maxconnrate n   #每个进程每秒创建的最大连接数量
+pidfile #指定pid文件路径
+log 127.0.0.1 local2 info #定义全局的syslog服务器；日志服务器需要开启UDP协议，最多可以定
+义两个
+
+
+vim /etc/rsyslog.conf 
+$ModLoad imudp
+$UDPServerRun 514
+......
+local3.*   /var/log/haproxy.log
+
+
+
+proxy 配置段 
+
+defaults [<name>] #默认配置项，针对以下的frontend、backend和listen生效，可以多个name也可
+以没有name
+frontend <name>   #前端servername，类似于Nginx的一个虚拟主机 server和LVS服务集群。
+backend <name>   #后端服务器组，等于nginx的upstream和LVS中的RS服务器
+listen   <name>   #将frontend和backend合并在一起配置，相对于frontend和backend配置更简洁，生产常用
+
+
+defaults 
+
+mode http|tcp #设置默认工作类型,使用TCP服务器性能更好，减少压力
+timeout http-keep-alive 120s #session 会话保持超时时间，此时间段内会转发到相同的后端服务器
+timeout connect 120s #客户端请求从haproxy到后端server最长连接等待时间(TCP连接之前)，默认单位ms
+timeout server 600s #客户端请求从haproxy到后端服务端的请求处理超时时长TCP连接之后认单位ms，如果超时，会出现502错误，此值建议设置较大些，访止502错误
+timeout client 600s #设置haproxy与客户端的最长非活动时间，默认单位ms，建议和timeout server相同
+timeout check   5s   #对后端服务器的默认检测超时时间
+default-server inter 1000 weight 3   #指定后端服务器的默认设置
+
+
+listen  
+isten WEB_PORT_80 
+   bind 10.0.0.7:80  
+   mode http
+   option forwardfor
+   server web1   10.0.0.17:8080   check inter 1000 fall 3 rise 2
+   server web2   10.0.0.27:8080   check inter 3000 fall 3 rise 5
+
+server 配置  
+
+
+#针对一个server配置
+check #对指定real进行健康状态检查，如果不加此设置，默认不开启检查,只有check后面没有其它配置也可以启用检查功能
+ #默认对相应的后端服务器IP和端口,利用TCP连接进行周期性健康性检查,注意必须指定
+端口才能实现健康性检查
+ addr <IP>   #可指定的健康状态监测IP，可以是专门的数据网段，减少业务网络的流量
+ port <num> #指定的健康状态监测端口
+ inter <num> #健康状态检查间隔时间，默认2000 ms
+ fall <num>   #后端服务器从线上转为线下的检查的连续失效次数，默认为3
+ rise <num>   #后端服务器从下线恢复上线的检查的连续有效次数，默认为2
+weight <weight> #默认为1，最大值为256，0(状态为蓝色)表示不参与负载均衡，但仍接受持久连接
+backup #将后端服务器标记为备份状态,只在所有非备份主机down机时提供服务，类似Sorry Server
+disabled #将后端服务器标记为不可用状态，即维护状态，除了持久模式，将不再接受连接,状态为深黄色,优雅下线,不再接受新用户的请求
+maxconn <maxconn> #当前后端server的最大并发连接数
+
+
+
+常见调度算法 
+balance roundrobin|leastconn|source|uri|hdr
+
+cookie name [ rewrite | insert | prefix ][ indirect ] [ nocache ][ postonly ] [ preserve ][ httponly ] [ secure ][ domain ]* [ maxidle <idle> ][ maxlife ]
+name： #cookie 的 key名称，用于实现持久连接
+insert： #插入新的cookie,默认不插入cookie
+indirect： #如果客户端已经有cookie,则不会再发送cookie信息
+nocache： #当client和hapoxy之间有缓存服务器（如：CDN）时，不允许中间缓存器缓存cookie，因为这会导致很多经过同一个CDN的请求都发送到同一台后端服务器
+
+
+
+listen web_port
+ bind 10.0.0.7:80
+ balance roundrobin
+ mode http #不支持 tcp mode
+ log global
+ cookie WEBSRV insert nocache indirect
+ server web1  10.0.0.17:80 check inter 3000 fall 2 rise 5 cookie web1 
+ server web2  10.0.0.27:80 check inter 3000 fall 2 rise 5 cookie web2
+
+
+
+hdr（[<name> [，<occ>]]）：完全匹配字符串,header的指定信息，<occ> 表示在多值中使用的值的出
+现次数
+hdr_beg（[<name> [，<occ>]]）：前缀匹配，header中指定匹配内容的begin
+hdr_end（[<name> [，<occ>]]）：后缀匹配，header中指定匹配内容end
+hdr_dom（[<name> [，<occ>]]）：域匹配，header中的domain name
+hdr_dir（[<name> [，<occ>]]）：路径匹配，header的uri路径
+hdr_len（[<name> [，<occ>]]）：长度匹配，header的长度匹配
+hdr_reg（[<name> [，<occ>]]）：正则表达式匹配，自定义表达式(regex)模糊匹配
+hdr_sub（[<name> [，<occ>]]）：子串匹配，header中的uri模糊匹配
+
+

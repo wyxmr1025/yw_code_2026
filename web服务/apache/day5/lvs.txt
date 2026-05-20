@@ -1,0 +1,41 @@
+负载均衡
+	容量  1000
+		  2000
+		  3000
+负载越高
+	纵向扩展（cpu,内存 摩尔定律）
+	横向扩展
+
+调度器：
+	4层调度（端口映射）
+		lvs(阿里巴巴 章文嵩)
+	7层调度（根据用户应用层相关信息调度）
+		nginx
+		haproxy
+
+	lvs 调度模型
+
+	nat 模型   请求报文 响应报文 经过调度器
+
+	dr  模型   请求报文 		响应报文 不经过调度器
+
+	tun 模型
+
+(0+c)/2
+
+(0+c)/1
+
+
+	调度算法  
+		rr: roundrobbin  轮询
+		lc： least connection  最少连接
+		wrr
+		wlc   
+		nq
+		sh  source hash     （临时解决会话不一致）
+
+
+1： 登录页面 
+2： 测试页面
+g386cqovorc3d6met2reirss92 
+g386cqovorc3d6met2reirss92
