@@ -1,0 +1,47 @@
+mysql 集群概念  
+ mysql 主从复制
+
+ 	二进制日志文件：记录数据库数据变化
+
+
+ 	中继日志文件：用于从服务器同步主二进制日志文件
+ 	主服务器：
+	 	1： 开启二进制日志文件
+	 			log_bin=/var/log/mysql/logbin
+	 	2： 设定server-id 
+	 			server-id=1
+	 	3:  添加用于主从复制的用户
+	 			GRANT REPLICATION SLAVE  ON *.* TO 'zhang'@'%' IDENTIFIED BY 'Aa@123456';
+	从服务器：
+		1： 开启中继日志
+				relay_log=/var/log/mysql/relaylog
+		2： 设定server-id
+				server-id=2
+		3:  设定从服务器为只读[选配]
+				read_only=1
+		4:  连接主服务器 
+				CHANGE MASTER TO MASTER_HOST='192.168.237.170', MASTER_USER='zhang', 
+	   	   		MASTER_PASSWORD='Aa@123456', 
+	   	   		MASTER_LOG_FILE='logbin.000002', 
+		   		MASTER_LOG_POS=986;
+		5： 启动从服务器 
+				start slave 
+		6： 查看从服务器 
+				 show slave status \G 
+		7:  关闭从服务器 
+				 stop slave ;
+		8:  清空从服务器配置 
+				 reset slave all  
+ mysql集群代理服务器实现读写分离
+ 		通过mycat 实现读写分离
+ 		安装mycat  
+ 			1： 准备java环境 
+ 			2：
+
+schema name=testdb --> dbnode--->dn1--->xxx
+					   datahost=localhost1 xxx	
+					   writehost	
+					   readhost
+
+
+ mysql集群高可用

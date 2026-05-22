@@ -1,0 +1,116 @@
+关系数据库 
+	数据的结构严格定死
+
+
+非关系型数据库  
+	k-v 
+		键值对  
+				memcache： 
+					1：数据类型单一支持字符串
+					2：不能持久化 
+				redis
+					1：支持数据类型众多 
+					2：持久化 
+	   应用场景 ：
+	   	   1： 会话服务器 保证会话一致性
+	   	   2： 缓存服务器
+	   	   3： 消息队列  削峰 解耦
+	   	   		kafaka
+	   	   		robbitmq
+	   	   		rockectmq
+	   	   4：热点排名
+	  reids安装：
+	     1: 准备编译环境
+	     		yum groupinstall "Development Tools"
+	     2: 解压redis包 
+
+	     3:  make [PREFIX=/usr/local/redis] install
+
+	  启动redis  
+	  	  redis-server  配置文件的路径
+
+	  默认情况 redis提供16个数据库  0-15
+
+	  	  切换数据库   
+	  	  	select  0-15
+	  	  	dbsize  查看当前数据库下边有多少key
+	  	  	EXISTS  查看key存在
+	  	  	KEYS *  列出当前数据库有哪些key (但是慎用)
+	  	  	MOVE    移动key到指定数据库 
+	  	  	DEL     删除key值
+	  	    INFO    列出服务器相关信息
+	  数据类型	    
+	  	 	字符串 
+			  	 	SET  KEY  VALUE  EX(设定存活时间秒) PX（毫秒） NX(当key不存在才创建)
+
+			  	 	GET  KEY
+
+			  	 	MSET KEY1 VALUE1 KEY2 VLAU2 ......
+
+			  	 	MGET KEY1 KEY2 KEY3 .......
+
+			  	 	INCR KEY +1 
+			  	 	DECR KEY -1
+			  	 	INCRBY AGE 20
+					DECRBY AGE 20
+			列表： 放入多个value  
+					LPUSH KEY  value1 value2  
+
+
+
+			集合: SET 无序 去重
+
+
+
+
+	redis 配置文件  
+			bind 0.0.0.0
+			port 6379
+			protected-mode no
+			daemonize yes|no  是否以守护进程方式运行redis 
+			pidfile /var/run/redis_6379.pid 指定redis进程文件的位置 
+			requirepass 123456   指定redis-server 访问密码
+	redis-cli  
+			auth  密码		
+
+			持久化 
+				rdb 
+					save 3600 1    一小时数据变化1次 作快照
+					save 300 100  
+					save 60 10000	
+					dbfilename dump.rdb  指定快照保存名称 
+					dir 指定快照保存 目录
+				aof
+					appendonly yes  开启aof 功能 
+
+					appendfilename "appendonly.aof"  指定aof文件名称 
+
+					appendfsync everysec | always  同步频率 
+			注意点当aof和rdp同时开启，redis优先使用aof
+					需要在终端开启aof 
+						config set appendonly yes (立即生效)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	hbase:列式数据库
+
+	文档数据库： mongodb 

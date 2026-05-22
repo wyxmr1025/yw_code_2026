@@ -1,0 +1,60 @@
+简单查询
+select  * from  tb_name 
+   		  where  
+   		  group by 
+   		  having
+   		  order by 
+   		  limit 
+子查询
+		查询的结果作为另外查询条件
+sql 注入漏洞 
+联合查询 条件 
+union select  列数必须一致
+
+关联查询 
+	等值关联
+
+存储引擎       文件系统  文件  存储引擎  表  
+	mysql  
+			Innodb (主要)  支持事务，行级锁，外键，热备
+					employees.frm  表结构文件 
+					employees.ibd  表空间（索引+数据）
+			索引： 某个字段作排序（btree） 
+			emp_no  10000-20000000
+
+
+			MySIAM （）	  不支持事务，行级锁，外键，热备
+				y2312.frm   
+				y2312.MYD  表数据  
+				y2312.MYI  表索引
+
+
+数据库变量  
+	系统变量（修改数据工作特性） 
+		show variables  like   
+
+		set var_name=value
+		会话级别 只对当前会话生效 
+				set var_name=value
+		全局级别 对以后会话生效
+				set global var_name=value
+
+				 innodb_file_per_table   每一张表一个表空间文件
+
+				 sql_mode = '' | traditional
+	状态变量
+		show status  like '' 
+		mysqladmin  status
+
+锁  
+
+acid
+
+隔离级别
+
+
+
+
+
+
+

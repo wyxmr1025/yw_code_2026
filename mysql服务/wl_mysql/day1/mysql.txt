@@ -1,0 +1,212 @@
+关系型数据库  业务数据  
+		mysql  
+		mariadb
+		sql server
+		oracle 
+		postgsql
+		。。。。
+
+	表： 字段固定
+	表之间存在一定参考关系
+	强一致型
+mysql ---》 orcale 
+mariadb
+	sql语句  增 
+			 删
+			 改
+			 查
+
+tidb 分布式
+
+
+
+非关系型数据库 最终一致型
+	redis：  k-v键值对
+	 per1:{ name： 张三,
+		  age： 20,
+		  major: 云计算
+		 }
+	per2: { name:
+			age
+			major
+			hobby: []
+	}
+
+
+/var/log/mysqld.log   
+
+alter user 'root'@'localhost' identified by '密码'
+
+flush privileges ；
+
+/etc/my.cnf 
+[mysqld]
+
+[client]
+~/.my.cnf
+
+
+
+ mysql_secure_installation 删除 必要用户和库
+ 	\c  清楚 
+ 	\g ; 提交 
+ 	\G   提交
+授权远程登录root  
+	grant all privileges on *.* to 'root'@'%' identified by 'Aa@123456' ;
+navicat：商业
+dbeaver: 免费
+库：  
+	创建  create database   
+	删除  drop database  
+	查询  show databases 
+表：  
+	字段组成  类型
+				数值  
+						整型 
+
+						浮点型
+
+				字符型 
+						定长
+						不定长 
+				文本     text 
+
+				布尔型
+
+				枚举  
+		键： 
+			 主键： 确定这一行数据（唯一，不为null）
+			 唯一键 ：  唯一 为null
+			 外键 ：
+
+id  name  age   
+
+
+
+
+CREATE TABLE `y2312`.`student`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `age` int NOT NULL,
+  `height` float NOT NULL,
+  `gender` enum('男','女') NOT NULL DEFAULT '女',
+  `birthday` datetime(255) NULL,
+  PRIMARY KEY (`id`)
+);
+
+show tables  
+desc tb_name 
+
+ALTER TABLE `y2312`.`student` 
+ADD COLUMN `tid` int NULL AFTER `name`;
+
+drop table
+
+	增  
+		insert into tb_name values()
+		 insert into student (name,age,height,gender,birthday) values("lisi",30,2.00,"male",'1997-2-10 00:00:00') ;
+	删  
+		delete from student where id=2 ;
+ 	改  
+ 		update student set age=  where
+ 	查   
+ 		select * from  tb_name  
+ 				 where 条件         
+ 				 					= 
+ 				 					!= 
+ 				 					> 
+ 				 					<
+ 				 					>=
+ 				 					<=
+ 				 			AND
+ 				 			OR
+ 				 			NOT !
+ 				 			BETWEEN   AND
+ 				 			IN
+ 				 			LIKE  ''  
+ 				 					%  
+ 				 					?
+
+ 		concat 
+		CONCAT_WS
+		SELECT
+	CEIL( DATEDIFF( NOW(), birth_date )/ 365 ) AS age,
+	first_name 
+	FROM
+	employees  
+	WHERE
+	CEIL( DATEDIFF( NOW(), birth_date )/ 365 ) > 65 
+  
+    聚合函数   
+    	max 
+    	min
+    	avg
+    	count
+
+SELECT
+	AVG( salary ) AS pay,
+	emp_no -- 4
+	
+FROM
+	salaries -- 1
+	
+WHERE
+	emp_no > 10001 -- 2
+	
+	GROUP BY-- 3
+	emp_no 
+HAVING
+	pay > 10000 -- 5
+	
+ORDER BY
+	pay DESC -- 6
+	
+	LIMIT 0,2 --7 
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+navicat
+
+
+
+ 	库
+
+ 	表 
+ 		字段
+
+
+
+
+
+
+
+
+
+
+	mongodb: 文档数据库 
+	{
+	   "name": "zhangsan",
+	   "age": 
+	}
+
+	elasticsearch
+	hbase  列式数据 
+	图式数据库
+
+
+
