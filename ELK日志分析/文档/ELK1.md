@@ -84,15 +84,13 @@
 
 ELK是一套开源的日志分析系统，由elasticsearch+logstash+Kibana组成。
 
-PV访问网站的次数，UV独立的ip
-
 
 
 官网说明:https://www.elastic.co/cn/products
 
 首先: 先一句话简单了解E,L,K这三个软件
 
-elasticsearch: 分布式搜索引擎（存储数据）
+elasticsearch: 分布式搜索引擎
 
 logstash: 日志收集与过滤，输出给elasticsearch
 
@@ -100,9 +98,13 @@ Kibana: 图形化展示
 
 ![1547990486807](图片/elk架构图.png)
 
+
+
 ```
-appserver应用服务器里面有nginx、mysql、tomcat日志被logstash收集，logstash交给elasticsearch集群，kibana连接elasticsearch将数据收集起来进行图形化展示，客户通过浏览器来访问kibana就可以看到应用手机的日志。web应用和logstash二者如何传===（端口、ip、要么主动、要么被动发过去、网络、防火墙有没有关服务有没有起起来端口对不对）
+appserver应用服务器被logstash收集交给elastic search的cluster的集群，通过kibana进行图形化展示
 ```
+
+>appserver到logstash过程中，数据传输有问题：防火墙有没有关，ip port配的对不对，服务器有没有起来。
 
 elk下载地址:https://www.elastic.co/cn/downloads
 
@@ -144,8 +146,6 @@ setenforce: SELinux is disabled
 ~~~powershell
 # systemctl restart ntpd
 # systemctl enable ntpd
-chronyc resource -v
-systemctl restart chronyd
 ~~~
 
 5, yum源(centos安装完系统后的默认yum源就OK)
@@ -168,7 +168,7 @@ Elasticsearch(简称ES)是一个**开源的分布式搜索引擎**,Elasticsearch
 
 ## elasticsearch部署
 
-第1步: 在elasticsearch服务器上(我这里为vm2),确认jdk(使用系统自带的**openjdk**就OK)，需要java环境----（解压 符号链接  环境   更新环境）
+第1步: 在elasticsearch服务器上(我这里为vm2),确认jdk(使用系统自带的**openjdk**就OK)
 
 ~~~powershell
 [root@vm2 ~]# rpm -qa |grep openjdk
@@ -185,7 +185,6 @@ OpenJDK 64-Bit Server VM (build 25.161-b14, mixed mode)
 ~~~powershell
 [root@vm2 ~]# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.2.rpm
 [root@vm2 ~]# rpm -ivh elasticsearch-6.5.2.rpm
-rpm -qc +软件名 可以查询软件安装的位置在哪里
 ~~~
 
 第3步: 单机es的配置与服务启动
@@ -197,6 +196,14 @@ path.data: /var/lib/elasticsearch
 path.logs: /var/log/elasticsearch
 network.host: 0.0.0.0							打开注释,并修改为监听所有
 http.port: 9200									打开注释,监听端口9200
+transport.port: 9300
+discovery.type: single-node
+xpack.security.enabled: false   =====>修改为false
+xpack.security.http.ssl:
+  enabled: false =====>
+xpack.security.transport.ssl:
+  enabled: false  =====>
+
 
 [root@vm2 ~]# systemctl start elasticsearch
 [root@vm2 ~]# systemctl enable elasticsearch
@@ -215,7 +222,7 @@ tcp6       0      0 :::9300                 :::*                    LISTEN      
 使用curl命令或浏览器访问http://10.1.1.12:9200/_cluster/health?pretty地址(IP为ES服务器IP)
 
 ~~~powershell
-[root@vm2 ~]# curl http://10.1.1.12:9200/_cluster/health?pretty  ==后面是api  pretty格式化输出
+[root@vm2 ~]# curl http://10.1.1.12:9200/_cluster/health?pretty
 ~~~
 
 
@@ -255,29 +262,42 @@ tcp6       0      0 :::9300                 :::*                    LISTEN      
 
 ~~~powershell
 [root@vm1 ~]# cat /etc/elasticsearch/elasticsearch.yml |grep -v "#"
-cluster.name: elk-cluster
+cluster.name: my-cluster
 node.name: 10.1.1.11					本机IP或主机名
-node.master: false						指定不为master节点，
+node.master: false						指定不为master节点
 path.data: /var/lib/elasticsearch
 path.logs: /var/log/elasticsearch
 network.host: 0.0.0.0
 http.port: 9200
-discovery.zen.ping.unicast.hosts: ["10.1.1.11", "10.1.1.12"]		集群所有节点IP
+transport.port: 9300
+xpack.security.enabled: false   =====>修改为false
+xpack.security.http.ssl:
+  enabled: false =====>
+xpack.security.transport.ssl:
+  enabled: false  =====>集群所有节点IP
+discovery.seed_hosts: ["192.168.66.6","192.168.66.7"]
+cluster.initial_master_nodes: ["192.168.66.6"]
+# discovery.type: single-node 这一行在集群模式中要注释掉
+unicast:点播 一对一
+multicast：组播
+boardcast：广播 所有人都知道
 ~~~
 
 ~~~powershell
+elasticsearch es数据节点：
 [root@vm2 ~]# cat /etc/elasticsearch/elasticsearch.yml |grep -v "#"
-cluster.name: elk-cluster
+cluster.name: my-cluster
 node.name: 10.1.1.12					本机IP或主机名
-node.master: true						指定为master节点，为管理
 path.data: /var/lib/elasticsearch
 path.logs: /var/log/elasticsearch
 network.host: 0.0.0.0
 http.port: 9200
-discovery.zen.ping.unicast.hosts: ["10.1.1.11", "10.1.1.12"]		集群所有节点IP
-unicast：点播 点对点===与一个人单聊
-multicast：组播 群聊
-boardcast： 广播 所有人都能听到
+transport.port: 9300
+xpack.security.enabled: false
+xpack.security.http.enabled: false
+xpack.security.transport.ssl.enabled: false
+discovery.seed_hosts: ["10.1.1.11", "10.1.1.12"]		集群所有节点IP
+cluster.initial_master_nodes: ["master 的IP"]
 ~~~
 
 启动或重启服务
@@ -335,9 +355,9 @@ Replicas(副本)：Index的一份或多份副本
 
 
 
-节点的高可用： ES是分布式搜索引擎，每个索引有一个或多个分片(shard)，索引的数据被分配到各个分片上。你可以看作是一份数据分成了多份给不同的节点。
+ES是分布式搜索引擎，每个索引有一个或多个分片(shard)，索引的数据被分配到各个分片上。你可以看作是一份数据分成了多份给不同的节点。
 
-数据的高可用： 当ES集群增加或删除节点时,shard会在多个节点中均衡分配。默认是5个primary shard(主分片)和1个replica shard(副本,用于容错，保证数据的高可用缺点是浪费了一半的空间)。
+当ES集群增加或删除节点时,shard会在多个节点中均衡分配。默认是5个primary shard(主分片)和1个replica shard(副本,用于容错)。
 
 
 
@@ -468,7 +488,10 @@ ES提供一种可用于执行查询JSON式的语言，被称为Query DSL。
 [root@vm2 ~]# wget https://raw.githubusercontent.com/elastic/elasticsearch/master/docs/src/test/resources/accounts.json
 
 导入进elasticsearch
-[root@vm2 ~]# curl -H "Content-Type: application/json" -XPOST "10.1.1.12:9200/bank/_doc/_bulk?pretty&refresh" --data-binary "@accounts.json"
+[root@vm2 ~]# curl -H "Content-Type: application/json" -XPOST "10.1.1.12:9200/bank/_bulk" --data-binary "@accounts.json"
+
+说明：
+_bulk 是elasticsearch的rest API路径的一部分，表示为“批量处理”
 
 查询确认
 [root@vm2 ~]# curl "10.1.1.12:9200/_cat/indices?v"
@@ -489,10 +512,12 @@ sort=account_number:asc 表示根据account_number按升序对结果排序
 pretty调整显示格式
 ~~~
 
-3, 查询bank索引的数据 (**使用json格式进行查询**)
+3, 查询bank索引的数据 (**使用json格式进行查询**)推荐使用
+
+Query DSL风格：通过json来实现数据的查询操作
 
 ~~~powershell
-[root@vm2 ~]# curl -X GET "10.1.1.12:9200/bank/_search" -H 'Content-Type: application/json' -d'
+[root@vm2 ~]# curl -X GET "10.1.1.12:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": { "match_all": {} },
   "sort": [
@@ -500,6 +525,11 @@ pretty调整显示格式
   ]
 }
 '
+说明：
+-X GET 请求方法
+API接口："10.1.1.12:9200/bank/_search?pretty" pretty代表期望返回结果为json格式
+-H 请求头，告诉服务器端，我发送的数据是什么格式
+-d data缩写，代表请求的数据
 注意: 最后为单引号
 ~~~
 
@@ -523,6 +553,7 @@ pretty调整显示格式
 # query告诉我们查询什么
 # match_all是我们查询的类型
 # match_all查询仅仅在指定的索引的所有文件进行搜索
+类似于mysql中：select * from tb_name;
 ~~~
 
 
@@ -538,6 +569,7 @@ pretty调整显示格式
 }
 '
 查询1条数据
+类似于mysql中：limit 查几条数据
 ~~~
 
 指定位置与查询条数
@@ -583,12 +615,16 @@ curl -X GET "10.1.1.12:9200/bank/_search?pretty" -H 'Content-Type: application/j
   "_source": ["account_number", "balance"]
 }
 '
+说明：
+类似于mysql：
+select * from bank;
+select account_number,balance from bank;
 ~~~
 
 
 
 - match
-  - 基本搜索查询，针对特定字段或字段集合进行搜索
+  - 基本搜索查询，针对特定字段或字段集合进行搜索（类似于模糊匹配，底层基于全文搜索）
 
 查询编号为20的账户
 
@@ -598,6 +634,7 @@ curl -X GET "10.1.1.12:9200/bank/_search?pretty" -H 'Content-Type: application/j
   "query": { "match": { "account_number": 20 } }
 }
 '
+特殊：match默认属于模糊匹配，但是如果是数字类型的匹配，相当于精准匹配，只有查询值为字符串类型，则相当于模糊匹配。
 ~~~
 
 返回地址中包含mill的账户
@@ -620,17 +657,31 @@ curl -X GET "10.1.1.12:9200/bank/_search?pretty" -H 'Content-Type: application/j
 '
 ~~~
 
+- term
+
+  基本搜索查询,针对特定字段或者字段集合惊醒搜索(类似于精准匹配)
+
+  ```
+   curl -X GET "10.1.1.12:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
+  {
+    "query": { "term": { "account_number": 20 } }			
+  }
+  '
+  ```
+
+  >match 和term都属于匹配,适合于文本匹配(不适合于数字), match擅长模糊匹配,只要指定字段包含搜索关键字则展示,term属于精准匹配,匹配指定字段必须=搜索关键字
+
 - bool
 
 ~~~powershell
-bool must 查询的字段必须同时存在  和
+bool must 查询的字段必须同时存在
 查询包含mill和lane的所有账户
 
 [root@vm2 ~]# curl -X GET "10.1.1.12:9200/bank/_search?pretty" -H 'Content-Type: application/json' -d'
 {
   "query": {
     "bool": {
-      "must": [  ===must和
+      "must": [
         { "match": { "address": "mill" } },
         { "match": { "address": "lane" } }
       ]
@@ -654,6 +705,8 @@ bool should 查询的字段仅存在一即可
   }
 }
 '
+must 等价于and
+should 等价于or
 ~~~
 
 
@@ -684,9 +737,9 @@ bool should 查询的字段仅存在一即可
 '
 ~~~
 
+>类比sql语句,between ...and 操作,fliter相当于where查询语句
 
-
-
+ 
 
 ## elasticsearch-head
 
@@ -704,6 +757,10 @@ elasticsearch-head是集群管理、数据可视化、增删改查、查询语�
 
 下载相应的软件包,并拷贝到ES集群的一个节点上(我这里拷贝到10.1.1.12这台,也就是vm2上)
 
+>推荐在google中添加小插件:Multi Elasticsearch Heads0.4.3
+>
+>添加输入: http://192.168.66.6:9200
+
 ![1545929944358](图片/es-head.png)
 
 nodejs下载页面: https://nodejs.org/en/download/
@@ -714,11 +771,11 @@ nodejs下载页面: https://nodejs.org/en/download/
 
 ~~~powershell
 [root@vm2 ~]# tar xf node-v10.15.0-linux-x64.tar.xz -C /usr/local/
-[root@vm2 ~]# mv /usr/local/node-v10.15.0-linux-x64/ /usr/local/node/
-[root@vm2 ~]# ls /usr/local/node/bin/npm 
+[root@vm2 ~]# mv /usr/local/node-v10.15.0-linux-x64/ /usr/local/nodejs/
+[root@vm2 ~]# ls /usr/local/nodejs/bin/npm 
 /usr/local/nodejs/bin/npm				确认有此命令
-[root@vm2 ~]# ln -s /usr/local/node/bin/npm /bin/npm
-[root@vm2 ~]# ln -s /usr/local/node/bin/node /bin/node
+[root@vm2 ~]# ln -s /usr/local/nodejs/bin/npm /bin/npm
+[root@vm2 ~]# ln -s /usr/local/nodejs/bin/node /bin/node
 ~~~
 
 **第3步: 安装es-head**
@@ -836,6 +893,40 @@ http.cors.allow-origin: "*"					加上最后这两句
 
 ![1548161814468](图片/es-head复合查询3.png)
 
+### cerebro安装
+
+```
+unzip cerebro...zip
+cd cerebro-main
+```
+
+#### 配置cerebro
+
+打开conf/application.conf
+
+```
+添加elasticsearch集群
+hosts = [
+    {
+      host = "http://192.168.66.6:9200"   主es的ip
+      name = "My Elasticsearch Cluster"
+    }
+]
+```
+
+#### 启动cerebro
+
+```
+root@agent2 cerebro-0.9.4]#./bin/cerebro
+root@agent2 cerebro-0.9.4]# bin/cerebro
+[info] play.api.Play - Application started (Prod) (no global state)
+[info] p.c.s.AkkaHttpServer - Listening for HTTP on /0:0:0:0:0:0:0:0:9000
+```
+
+打开浏览器,输入:http://ip地址:9000/,如下图
+
+![Snipaste_2025-10-11_19-29-11](图片\Snipaste_2025-10-11_19-29-11.png)
+
 # logstash
 
 ## logstash简介
@@ -854,7 +945,7 @@ logstash可以采集任何格式的数据,当然我们这里主要是讨论采�
 
 ![1548158284629](图片/logstash工作流.png)
 
-input插件:  用于导入日志源 (**==配置必须==**)  file
+input插件:  用于导入日志源 (**==配置必须==**) 
 
 <https://www.elastic.co/guide/en/logstash/current/input-plugins.html>
 
@@ -862,7 +953,7 @@ filter插件:  用于过滤(**==不是配置必须的==**)
 
 https://www.elastic.co/guide/en/logstash/current/filter-plugins.html
 
-output插件:  用于导出(**==配置必须==**)  es
+output插件:  用于导出(**==配置必须==**) 
 
 https://www.elastic.co/guide/en/logstash/current/output-plugins.html
 
@@ -872,7 +963,7 @@ https://www.elastic.co/guide/en/logstash/current/output-plugins.html
 
 ## logstash部署
 
-在logstash服务器上确认openjdk安装 需要java环境
+在logstash服务器上确认openjdk安装
 
 ~~~powershell
 [root@vm3 ~]# java -version
@@ -920,8 +1011,8 @@ path.logs: /var/log/logstash
 **另一种验证方法：**
 
 ~~~powershell
-#上述测试还可以使用如下方法进行：  写成一个文件
-[root@vm3]# vim /etc/logstash/conf.d/test.conf  随意写名字test.conf
+#上述测试还可以使用如下方法进行：
+[root@vm3]# vim /etc/logstash/conf.d/test.conf
 
 input {
         stdin {
@@ -933,7 +1024,7 @@ filter {
 
 output {
         stdout {
-                codec => rubydebug				写或者不写
+                codec => rubydebug				
         }
 }
 
@@ -949,12 +1040,10 @@ Config Validation Result: OK. Exiting Logstash
 -f 指定片段配置文件
 -t 测试配置文件是否正确
 codec => rubydebug这句可写可不定,默认就是这种输出方式
-jobs -l 查看当前进程的id
-fg %id==运行在前台
 ~~~
 
 ~~~powershell
-[root@vm3 bin]# ./logstash --path.settings /etc/logstash -r -f /etc/logstash/conf.d/test.conf
+[root@vm3 bin]# ./logstash --path.settings /etc/logstash -r -f /etc/logstash/conf.d/test.conf -t
 ......
 
 haha
@@ -975,7 +1064,11 @@ hehe
 -r参数很强大,会动态装载配置文件,也就是说启动后,可以不用重启修改配置文件
 ~~~
 
-
+>如何查找安装的rpm包的配置目录
+>
+>1、rpm -ql logstash.rpm
+>
+>2、find / -name "logstash"
 
 
 
@@ -997,7 +1090,7 @@ input {
 output {
     elasticsearch{
         hosts => ["10.1.1.12:9200"]
-        index => "test-%{+YYYY.MM.dd}"
+        index => "test-%{+YYYY-MM-dd}"
     }
 }
 
@@ -1036,12 +1129,12 @@ output {
 
 input {
         file {
-                path => "/var/log/messages"  ==收集文件的路径
+                path => "/var/log/messages"
                 start_position => "beginning"
                 type => "messages"
         }
 
-        file {
+        file {(5yy p)
                 path => "/var/log/yum.log"
                 start_position => "beginning"
                 type => "yum"
@@ -1062,8 +1155,8 @@ output {
 
         if [type] == "yum" {
         elasticsearch {
-                hosts => ["10.1.1.12:9200","10.1.1.11:9200"]  ===es集群
-                index => "yum-%{+YYYY-MM-dd}"  ===索引
+                hosts => ["10.1.1.12:9200","10.1.1.11:9200"]
+                index => "yum-%{+YYYY-MM-dd}"
                 }
         }
 }

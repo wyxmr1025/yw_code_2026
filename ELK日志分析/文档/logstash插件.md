@@ -215,8 +215,8 @@ input {
 
 filter {
   json {
-    source => "message"  ===源
-    target => "content"  ====目标
+    source => "message"
+    target => "content"
   }
 }
 
@@ -379,7 +379,7 @@ output {
 
 
 
-### grok(关注，调用正则表达式)
+### grok(关注)
 
 - grok是将非结构化数据解析为结构化
 - 这个工具非常适于系统日志，mysql日志，其他Web服务器日志以及通常人类无法编写任何日志的格式。
@@ -472,7 +472,7 @@ ID [0-9]{3,5}
 配置文件中应包含如下内容
 filter {
   grok {
-    patterns_dir =>"/opt/patterns"   存放的位置
+    patterns_dir =>"/opt/patterns"
     match => {
       "message" => "%{IP:client} %{WORD:method} %{URIPATHPARAM:request} %{NUMBER:bytes} %{NUMBER:duration} %{ID:id}"              
     }
@@ -526,13 +526,16 @@ output {
 
 
 
-### geoip(关注)，将ip地址与地理位置对应起来
+### geoip(关注)
 
-- 开源IP地址库   
+- 开源IP地址库
+
 - https://dev.maxmind.com/geoip/geoip2/geolite2/
 
+  ![Snipaste_2026-04-01_10-01-31](图片\Snipaste_2026-04-01_10-01-31.png)
+
 ~~~powershell
-下载IP地址库  在logstash主机里面下载
+下载IP地址库
 [root@vm3 ~]# wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz
 
 [root@vm3 ~]# tar xf GeoLite2-City.tar.gz

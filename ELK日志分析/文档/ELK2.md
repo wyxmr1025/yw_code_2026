@@ -77,6 +77,9 @@ https://github.com/anbai-inc/Kibana_Hanization/
 这里要注意:1,要安装python; 2,rpm版的kibana安装目录为/usr/share/kibana/
 [root@vm1 Kibana_Hanization-master]# python main.py /usr/share/kibana/
 
+ps:新版本汉化：修改主配置文件 /etc/kibana/kibana.yml
+i18n.local: "zh-CN"
+
 汉化完后需要重启
 [root@vm1 Kibana_Hanization-master]# systemctl stop kibana
 [root@vm1 Kibana_Hanization-master]# systemctl start kibana
@@ -158,7 +161,7 @@ https://github.com/anbai-inc/Kibana_Hanization/
 
 # filebeat
 
-因为**logstash消耗内存等资源太高**,如果在要采集的服务上都安装logstash,这样对应用服务器的压力增加。所以我们要用**轻量级**的采集工具才更高效,更省资源。在服务端采集到的数据可以交给logstash也可以给es，给logstash主要是过滤，交给es主要是可以在kinaba进行图形化展示。===架构EFK把logstash换成了filebeat
+因为**logstash消耗内存等资源太高**,如果在要采集的服务上都安装logstash,这样对应用服务器的压力增加。所以我们要用**轻量级**的采集工具才更高效,更省资源。
 
 
 
@@ -175,7 +178,7 @@ beats是轻量级的日志收集处理工具，Beats占用资源少
 
 我们这里主要是收集日志信息, 所以只讨论filebeat。
 
-filebeat可以直接将采集的日志数据传输给ES集群（EFK), 也可以给logstash(**==5044==**端口接收，filebeat给logstash主要是过滤)。
+filebeat可以直接将采集的日志数据传输给ES集群（EFK), 也可以给logstash(**==5044==**端口接收)。
 
 
 
@@ -194,7 +197,7 @@ filebeat可以直接将采集的日志数据传输给ES集群（EFK), 也可以�
 
 ~~~powershell
 [root@vm4 ~]# cat /etc/filebeat/filebeat.yml |grep -v '#' |grep -v '^$'
-filebeat.inputs:  输入
+filebeat.inputs:
 - type: log
   enabled: true						改为true
   paths:
@@ -205,7 +208,7 @@ filebeat.config.modules:
 setup.template.settings:
   index.number_of_shards: 3
 setup.kibana:
-output.elasticsearch:	输出			输出给es集群
+output.elasticsearch:				输出给es集群
   hosts: ["10.1.1.12:9200"]			es集群节点ip
 processors:
   - add_host_metadata: ~
@@ -227,26 +230,24 @@ processors:
 
 **练习:**可以尝试使用两台filebeat收集日志，然后在kibana用筛选器进行筛选过滤查看。(可先把logstash那台关闭logstash进行安装filebeat测试)
 
-以上是filebeat收集的日志直接给ES集群，此时叫EFK
-
-接下来就是filebeat收集日志给logstash，logstash再给es===logstash不在收集日志，而是filebeat收集，修改接收端口
 
 
 
-## filebeat传输给logstash，logstash再给ES
 
-第1步: 在logstash上要重新配置，开放5044端口给filebeat连接，并重启logstash服务==filebeat收集日志交给logstash，logstash再给es
+## filebeat传输给logstash
+
+第1步: 在logstash上要重新配置，开放5044端口给filebeat连接，并重启logstash服务
 
 ~~~powershell
 [root@vm3 ~]# vim /etc/logstash/conf.d/test.conf 
 input {
     beats {
-        port => 5044  ===filebeat开的端口
+        port => 5044
     }
 }
 
 output {
-    elasticsearch {        =====es接受的主机ip和端口
+    elasticsearch {
         hosts => ["10.1.1.12:9200"]
         index =>  "filebeat2-%{+YYYY.MM.dd}"
     }
@@ -258,10 +259,10 @@ output {
 如果前面有使用后台跑过logstash实例的请kill掉先
 [root@vm3 bin]# pkill java
 
-[root@vm3 bin]# ./logstash --path.settings /etc/logstash/ -r -f /etc/logstash/conf.d/test.conf &  &后台，如果没有变化。试着安装一个东西使日志有变化
+[root@vm3 bin]# ./logstash --path.settings /etc/logstash/ -r -f /etc/logstash/conf.d/test.conf
 ~~~
 
-第2步: 配置filebeat收集日志，在输出上面注释之前的ip和端口
+第2步: 配置filebeat收集日志
 
 ~~~powershell
 [root@vm4 ~]# cat /etc/filebeat/filebeat.yml |grep -v '#' |grep -v '^$'
@@ -306,7 +307,7 @@ processors:
 1, 在filebeat这台服务器上安装nginx,启动服务。并使用浏览器访问刷新一下，模拟产生一些相应的日志(**==强调==**: 我们在这里是模拟的实验环境，一定要搞清楚实际情况下是把filebeat安装到nginx服务器上去收集日志)
 
 ~~~powershell
-[root@vm4 ~]# yum install epel-release -y  nginx需要epel源
+[root@vm4 ~]# yum install epel-release -y
 [root@vm4 ~]# yum install nginx -y
 [root@vm4 ~]# systemctl restart nginx
 [root@vm4 ~]# systemctl enable nginx
