@@ -10,7 +10,7 @@
 node1 /etc/ceph> cephadm bootstorap --mon-ip 192.168.66.101
 ```
 
-![Snipaste_2026-05-31_11-29-28](/ceph图片/Snipaste_2026-05-31_11-29-28.png)
+![Snipaste_2026-05-31_11-29-28](ceph图片/Snipaste_2026-05-31_11-29-28.png)
 
 **配置ceph源**
 
@@ -128,9 +128,9 @@ node1> for i in node1 node2 node3;do for j in sdb sdc sdd; do ceph orch daemon a
 
 如果磁盘无法添加报错，提示磁盘非空，可以考虑使用如下脚本清理所有磁盘：disk_clean.sh
 
-![Snipaste_2026-05-31_15-26-04](/ceph图片/Snipaste_2026-05-31_15-26-04.png)
+![Snipaste_2026-05-31_15-26-04](ceph图片/Snipaste_2026-05-31_15-26-04.png)
 
-![Snipaste_2026-05-31_15-26-58](/ceph图片/Snipaste_2026-05-31_15-26-58.png)
+![Snipaste_2026-05-31_15-26-58](ceph图片/Snipaste_2026-05-31_15-26-58.png)
 
 登录ceph web界面：
 
@@ -186,21 +186,21 @@ node1> scp /etc/ceph/{ceph.conf,ceph.client.admin.keyring} root@node5:/etc/ceph
 
 ### 三、集群节点的缩容方法：
 
-![Snipaste_2026-05-31_17-19-52](/ceph图片/Snipaste_2026-05-31_17-19-52.png)
+![Snipaste_2026-05-31_17-19-52](ceph图片/Snipaste_2026-05-31_17-19-52.png)
 
-![Snipaste_2026-05-31_17-21-08](/ceph图片/Snipaste_2026-05-31_17-21-08.png)
+![Snipaste_2026-05-31_17-21-08](ceph图片/Snipaste_2026-05-31_17-21-08.png)
 
-![Snipaste_2026-05-31_17-22-29](/ceph图片/Snipaste_2026-05-31_17-22-29.png)
+![Snipaste_2026-05-31_17-22-29](ceph图片/Snipaste_2026-05-31_17-22-29.png)
 
-![Snipaste_2026-05-31_17-24-08](/ceph图片/Snipaste_2026-05-31_17-24-08.png)
+![Snipaste_2026-05-31_17-24-08](ceph图片/Snipaste_2026-05-31_17-24-08.png)
 
-![Snipaste_2026-05-31_17-24-52](/ceph图片/Snipaste_2026-05-31_17-24-52.png)
+![Snipaste_2026-05-31_17-24-52](ceph图片/Snipaste_2026-05-31_17-24-52.png)
 
-![Snipaste_2026-05-31_17-25-24](/ceph图片/Snipaste_2026-05-31_17-25-24.png)
+![Snipaste_2026-05-31_17-25-24](ceph图片/Snipaste_2026-05-31_17-25-24.png)
 
-![Snipaste_2026-05-31_17-26-04](/ceph图片/Snipaste_2026-05-31_17-26-04.png)
+![Snipaste_2026-05-31_17-26-04](ceph图片/Snipaste_2026-05-31_17-26-04.png)
 
-![Snipaste_2026-05-31_17-31-40](/ceph图片/Snipaste_2026-05-31_17-31-40.png)
+![Snipaste_2026-05-31_17-31-40](ceph图片/Snipaste_2026-05-31_17-31-40.png)
 
 ### 四、创建ceph文件存储
 
@@ -466,9 +466,9 @@ client> yum install s3cmd -y
 cilent> s3cmd --configure
 ```
 
-![Snipaste_2026-06-01_16-09-24](/ceph图片/Snipaste_2026-06-01_16-09-24.png)
+![Snipaste_2026-06-01_16-09-24](ceph图片/Snipaste_2026-06-01_16-09-24.png)
 
-![Snipaste_2026-06-01_16-10-37](/ceph图片/Snipaste_2026-06-01_16-10-37.png)
+![Snipaste_2026-06-01_16-10-37](ceph图片/Snipaste_2026-06-01_16-10-37.png)
 
 ##### 2、命令测试
 
@@ -487,7 +487,7 @@ client> s3cmd --help
 
 ### 七、项目部署实践：ceph+nextcloud打造私有云盘
 
-![Snipaste_2026-06-01_16-32-18](/ceph图片/Snipaste_2026-06-01_16-32-18.png)
+![Snipaste_2026-06-01_16-32-18](ceph图片/Snipaste_2026-06-01_16-32-18.png)
 
 #### 1、创建bucket
 
@@ -531,4 +531,4 @@ client> chmod apache:apache -R /var/www/html/
 
 > 浏览器中输入:192.168.66.104/nextcloud
 
-![Snipaste_2026-06-01_16-56-36](/ceph图片/Snipaste_2026-06-01_16-56-36.png)
+![Snipaste_2026-06-01_16-56-36](ceph图片/Snipaste_2026-06-01_16-56-36.png)
