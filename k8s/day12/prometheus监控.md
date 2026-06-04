@@ -18,7 +18,7 @@
 最核心的是prometheus server，TSDB时序数据库存放到硬盘中，采集数据的客服端exporter  pull拉去到时序数据库中，每隔时间间隔收集一次，放到时序数据库中，再通过http server 输出到页面，页面功能不是很强大，就通过grafana  web接口，在grafana来展示。也可以将告警push 到alertmanage发送给邮件/dingding/企业微信。同时也支持服务发现机制，动态收集各种pod和组件。监控收集的数据主动推送到pushgateway，然后prometheus主动去拉去
 ```
 
-![image-20240516213352622](pict\image-20240516213352622.png)
+![image-20240516213352622](pict/image-20240516213352622.png)
 
 #### 3、安装promethtus:
 
@@ -29,7 +29,7 @@
 浏览器中输入： ip:9090出现prometheus页面
 时间同步：chronyc sources -v
 date -s "2024-03-26 16:37"
-systemctl restart chroyyd
+systemctl restart chronyd
 
 
 102:节点
