@@ -145,7 +145,7 @@ spec:
 #内置的kubelet的svc：kubectl get svc/kubelet -n kube-system -o yaml
 ```
 
-![Snipaste_2026-05-11_16-14-53](pict\Snipaste_2026-05-11_16-14-53.png)
+![Snipaste_2026-05-11_16-14-53](pict/Snipaste_2026-05-11_16-14-53.png)
 
 ```
 node-export的servicemonitor
