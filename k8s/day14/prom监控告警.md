@@ -41,7 +41,7 @@ qq授权码：umywuycjtnotidbh|blndllrisdezhjja
 
 ```
 
-![Snipaste_2025-12-16_11-29-59](pict\Snipaste_2025-12-16_11-29-59.png)
+![Snipaste_2025-12-16_11-29-59](pict/Snipaste_2025-12-16_11-29-59.png)
 
 ####  3、k8s集群引入altermanager
 
@@ -200,9 +200,9 @@ k8s中删除prometheus触发告警
 qq验证码：ydxgntyobmjvgegi
 ```
 
-![Snipaste_2025-11-14_17-24-16](pict\Snipaste_2025-11-14_17-24-16.png)
+![Snipaste_2025-11-14_17-24-16](pict/Snipaste_2025-11-14_17-24-16.png)
 
-![Snipaste_2025-11-14_17-25-17](pict\Snipaste_2025-11-14_17-25-17.png)
+![Snipaste_2025-11-14_17-25-17](pict/Snipaste_2025-11-14_17-25-17.png)
 
 #### 4、altermanager告警路由之钉钉
 
