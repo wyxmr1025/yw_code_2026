@@ -349,7 +349,7 @@ person = ['Tom',20,'男','北京市昌平区']
 * 数据为==键值对==形式出现， => {key:value},key：键名，value：值，在同一分字典中，key必须是唯一（类似于索引下标）
 * 各个键值对之间用逗号隔开。
 
-![Snipaste_2026-04-29_10-18-58](pict\Snipaste_2026-04-29_10-18-58.png)
+![Snipaste_2026-04-29_10-18-58](pict/Snipaste_2026-04-29_10-18-58.png)
 
 #### 3、字典的增操作（重点）
 
@@ -441,7 +441,7 @@ set集合，作用：==无序==且天生去重，特点：==去重==
 
 > 字典、集合都可以通过{}花括号，如果{}是key:value键值对，就代表是字典；如果是具体的值，就是集合。
 
-![Snipaste_2026-04-29_10-48-54](pict\Snipaste_2026-04-29_10-48-54.png)
+![Snipaste_2026-04-29_10-48-54](pict/Snipaste_2026-04-29_10-48-54.png)
 
 #### 3、集合操作的相关方法（增删查）
 
@@ -534,7 +534,7 @@ f.close()
 print("写入数据成功")
 ```
 
-![Snipaste_2025-10-17_09-34-17](pict\Snipaste_2025-10-17_09-34-17.png)
+![Snipaste_2025-10-17_09-34-17](pict/Snipaste_2025-10-17_09-34-17.png)
 
 ### 3、文件读取操作
 
@@ -611,11 +611,11 @@ while True:
 f.close()
 ```
 
-![Snipaste_2025-10-17_10-19-33](pict\Snipaste_2025-10-17_10-19-33.png)
+![Snipaste_2025-10-17_10-19-33](pict/Snipaste_2025-10-17_10-19-33.png)
 
 #### 扩展：with上下文管理器与for line in f 文件对象
 
-![Snipaste_2025-10-17_10-23-31](pict\Snipaste_2025-10-17_10-23-31.png)
+![Snipaste_2025-10-17_10-23-31](pict/Snipaste_2025-10-17_10-23-31.png)
 
 ## 三、文件和文件夹操作
 
@@ -658,7 +658,7 @@ os.remove('linux.txt')
 
 相关方法：
 
-![Snipaste_2025-10-17_11-00-46](pict\Snipaste_2025-10-17_11-00-46.png)
+![Snipaste_2025-10-17_11-00-46](pict/Snipaste_2025-10-17_11-00-46.png)
 
 ````
 import os
@@ -699,7 +699,7 @@ if os.path.exists('images'):
 
 
 
-![Snipaste_2025-10-17_11-15-14](pict\Snipaste_2025-10-17_11-15-14.png)
+![Snipaste_2025-10-17_11-15-14](pict/Snipaste_2025-10-17_11-15-14.png)
 
 ```
 import os
@@ -755,11 +755,11 @@ for stats, count in status_status.items():
 
 #### 1、为什么需要函数
 
-![Snipaste_2025-10-17_14-50-09](pict\Snipaste_2025-10-17_14-50-09.png)
+![Snipaste_2025-10-17_14-50-09](pict/Snipaste_2025-10-17_14-50-09.png)
 
 #### 2、什么是函数
 
-![Snipaste_2025-10-17_14-50-56](pict\Snipaste_2025-10-17_14-50-56.png)
+![Snipaste_2025-10-17_14-50-56](pict/Snipaste_2025-10-17_14-50-56.png)
 
 #### 3、函数的定义
 
@@ -865,21 +865,21 @@ def func():
 
 在python中，定义在函数外部的变量称之为全局变量；定义在函数内部变量就称之为局部变量
 
-![Snipaste_2025-10-17_17-36-49](pict\Snipaste_2025-10-17_17-36-49.png)
+![Snipaste_2025-10-17_17-36-49](pict/Snipaste_2025-10-17_17-36-49.png)
 
 #### 3、变量的作用范围
 
 全局变量： 在整个程序范围内都可以直接使用
 
-![Snipaste_2025-10-17_17-38-19](pict\Snipaste_2025-10-17_17-38-19.png)
+![Snipaste_2025-10-17_17-38-19](pict/Snipaste_2025-10-17_17-38-19.png)
 
 局部变量： 在函数的调用过程中，开始定义，函数运行过程中生效，函数执行完毕后，销毁
 
-![Snipaste_2025-10-17_17-39-43](pict\Snipaste_2025-10-17_17-39-43.png)
+![Snipaste_2025-10-17_17-39-43](pict/Snipaste_2025-10-17_17-39-43.png)
 
 #### 4、global关键字的应用场景
 
-![Snipaste_2025-10-17_17-43-53](pict\Snipaste_2025-10-17_17-43-53.png)
+![Snipaste_2025-10-17_17-43-53](pict/Snipaste_2025-10-17_17-43-53.png)
 
 ## 七、函数的参数进阶
 
@@ -901,21 +901,21 @@ func(10,20,30)
 
 实参： 在函数调用时，所传递的参数就称之为实际参数
 
-![Snipaste_2025-10-17_17-48-34](pict\Snipaste_2025-10-17_17-48-34.png)
+![Snipaste_2025-10-17_17-48-34](pict/Snipaste_2025-10-17_17-48-34.png)
 
 #### 2、函数的参数类型（传参）
 
 ##### 1、位置参数
 
-理论上，在函数定义时，我们可以为其定义多个参数。但是在函数调用时，我们也应该传递多个参数，正常情况下其要一一对应
+理论上，在函数定义时，我们可以为其定义多个参数。但是在函数调用时，我们也应该传递多个参数，正常情况下其要==一一对应==
 
-![Snipaste_2025-10-17_17-51-21](pict\Snipaste_2025-10-17_17-51-21.png)
+![Snipaste_2025-10-17_17-51-21](pict/Snipaste_2025-10-17_17-51-21.png)
 
 ##### 2、关键词参数（python特有）
 
 函数调用，通过==**“键=值”**== 形式加以指定。可以让函数更加清晰、容易使用，同时也清楚了参数的顺序需求。
 
-![Snipaste_2025-10-17_17-54-37](pict\Snipaste_2025-10-17_17-54-37.png)
+![Snipaste_2025-10-17_17-54-37](pict/Snipaste_2025-10-17_17-54-37.png)
 
 ##### 3、函数的默认值参数（缺省参数）
 
@@ -984,9 +984,9 @@ func2(a=10, b=20)
 
 ##### 3、*args与**kwargs混合使用场景
 
-![Snipaste_2025-10-18_09-51-10](pict\Snipaste_2025-10-18_09-51-10.png)
+![Snipaste_2025-10-18_09-51-10](pict/Snipaste_2025-10-18_09-51-10.png)
 
-![Snipaste_2025-10-18_09-53-59](pict\Snipaste_2025-10-18_09-53-59.png)
+![Snipaste_2025-10-18_09-53-59](pict/Snipaste_2025-10-18_09-53-59.png)
 
 ## 八、Python模块导入
 
@@ -996,7 +996,7 @@ python模块，是一个python文件，以.py结尾，包含了python对象定�
 
 > 使用Ctrl+模块名 跳转到底层模块文件
 
-![Snipaste_2025-10-18_10-00-20](pict\Snipaste_2025-10-18_10-00-20.png)
+![Snipaste_2025-10-18_10-00-20](pict/Snipaste_2025-10-18_10-00-20.png)
 
 #### 2、模块分类
 
@@ -1016,21 +1016,21 @@ from 模块名 import *
 
 from 模块名 import 功能名
 
-![Snipaste_2025-10-18_10-11-55](pict\Snipaste_2025-10-18_10-11-55.png)
+![Snipaste_2025-10-18_10-11-55](pict/Snipaste_2025-10-18_10-11-55.png)
 
-![Snipaste_2025-10-18_10-13-27](pict\Snipaste_2025-10-18_10-13-27.png)
+![Snipaste_2025-10-18_10-13-27](pict/Snipaste_2025-10-18_10-13-27.png)
 
 #### 4、math模块
 
-![Snipaste_2025-10-18_10-30-59](pict\Snipaste_2025-10-18_10-30-59.png)
+![Snipaste_2025-10-18_10-30-59](pict/Snipaste_2025-10-18_10-30-59.png)
 
 #### 5、内置魔术变量__name__
 
-![Snipaste_2025-10-18_10-31-56](pict\Snipaste_2025-10-18_10-31-56.png)
+![Snipaste_2025-10-18_10-31-56](pict/Snipaste_2025-10-18_10-31-56.png)
 
-![Snipaste_2025-10-18_10-37-25](pict\Snipaste_2025-10-18_10-37-25.png)
+![Snipaste_2025-10-18_10-37-25](pict/Snipaste_2025-10-18_10-37-25.png)
 
-![Snipaste_2025-10-18_10-42-07](pict\Snipaste_2025-10-18_10-42-07.png)
+![Snipaste_2025-10-18_10-42-07](pict/Snipaste_2025-10-18_10-42-07.png)
 
 除了可以用于自定义模块测试以外，if \__name__  ==  '\__main\__\',还可以用于项目主程序的入口。
 
@@ -1041,11 +1041,11 @@ if __name__ == '__main__'
 运行程序...
 ```
 
-![Snipaste_2025-10-18_10-46-39](pict\Snipaste_2025-10-18_10-46-39.png)
+![Snipaste_2025-10-18_10-46-39](pict/Snipaste_2025-10-18_10-46-39.png)
 
 #### 6、引入其他模块中的方法在本函数中使用：
 
-![Snipaste_2025-10-18_10-51-11](pict\Snipaste_2025-10-18_10-51-11.png)
+![Snipaste_2025-10-18_10-51-11](pict/Snipaste_2025-10-18_10-51-11.png)
 
 #### 7、datetime时间模块
 
@@ -1057,7 +1057,7 @@ if __name__ == '__main__'
 
 ##### 1、时间格式与解析
 
-![Snipaste_2025-10-18_11-09-19](pict\Snipaste_2025-10-18_11-09-19.png)
+![Snipaste_2025-10-18_11-09-19](pict/Snipaste_2025-10-18_11-09-19.png)
 
 ```
 from datetime import datetime
@@ -1108,7 +1108,7 @@ else:
 位于时间范围区间
 ```
 
-![Snipaste_2025-10-18_11-41-46](pict\Snipaste_2025-10-18_11-41-46.png)
+![Snipaste_2025-10-18_11-41-46](pict/Snipaste_2025-10-18_11-41-46.png)
 
 ##### 4、综合案例
 
@@ -1199,13 +1199,13 @@ with open('./data.txt', 'r', encoding='utf-8') as file:
 
 如果存储的字典中有中文 ，则在json.dump(data,file, ensure_ascii=Flase)
 
-![Snipaste_2025-10-18_16-16-37](pict\Snipaste_2025-10-18_16-16-37.png)
+![Snipaste_2025-10-18_16-16-37](pict/Snipaste_2025-10-18_16-16-37.png)
 
 ## 十、综合案例：python实现日志分析与统计
 
-![Snipaste_2025-10-18_16-19-47](pict\Snipaste_2025-10-18_16-19-47.png)
+![Snipaste_2025-10-18_16-19-47](pict/Snipaste_2025-10-18_16-19-47.png)
 
-![Snipaste_2025-10-18_16-22-57](pict\Snipaste_2025-10-18_16-22-57.png)
+![Snipaste_2025-10-18_16-22-57](pict/Snipaste_2025-10-18_16-22-57.png)
 
 #### 1、前置知识点
 
@@ -1432,9 +1432,9 @@ print(f'磁盘读取IOPS：{read_count/1:.2f}IOPS')
 print(f'磁盘写入IOPS：{write_count/1:.2f}IOPS')
 ```
 
-![Snipaste_2025-10-18_20-04-47](pict\Snipaste_2025-10-18_20-04-47.png)
+![Snipaste_2025-10-18_20-04-47](pict/Snipaste_2025-10-18_20-04-47.png)
 
-![Snipaste_2025-10-18_20-05-30](pict\Snipaste_2025-10-18_20-05-30.png)
+![Snipaste_2025-10-18_20-05-30](pict/Snipaste_2025-10-18_20-05-30.png)
 
 #### 6、获取网络信息
 
@@ -1452,7 +1452,7 @@ print(f'磁盘写入IOPS：{write_count/1:.2f}IOPS')
 
 ⑤吞吐量： 实际传输的数据量，通常小于带宽上限。
 
-![Snipaste_2025-10-18_20-14-43](pict\Snipaste_2025-10-18_20-14-43.png)
+![Snipaste_2025-10-18_20-14-43](pict/Snipaste_2025-10-18_20-14-43.png)
 
 ```
 import psutil
@@ -1495,9 +1495,9 @@ for interface_name, interface_addrs in net_ip_addrs.items():
 
 #### 注意：
 
-![Snipaste_2025-10-19_09-31-12](pict\Snipaste_2025-10-19_09-31-12.png)
+![Snipaste_2025-10-19_09-31-12](pict/Snipaste_2025-10-19_09-31-12.png)
 
-![Snipaste_2025-10-19_09-32-44](pict\Snipaste_2025-10-19_09-32-44.png)
+![Snipaste_2025-10-19_09-32-44](pict/Snipaste_2025-10-19_09-32-44.png)
 
 #### 7、psutil运维场景
 
@@ -1555,7 +1555,7 @@ liunx上写shell脚本远程ssh操作处理密码有两种方法：
 
 ② expect 自动应答处理密码
 
-![Snipaste_2025-10-19_10-18-43](pict\Snipaste_2025-10-19_10-18-43.png)
+![Snipaste_2025-10-19_10-18-43](pict/Snipaste_2025-10-19_10-18-43.png)
 
 #### 2、安装paramiko
 
@@ -1812,7 +1812,7 @@ python提供了简单的time.sleep()方法，接货人循环实现间隔性任�
 
 ②调用time.sleep(interval)设置间隔时间（单位：秒）
 
-![Snipaste_2025-10-19_17-40-11](pict\Snipaste_2025-10-19_17-40-11.png)
+![Snipaste_2025-10-19_17-40-11](pict/Snipaste_2025-10-19_17-40-11.png)
 
 #### 3、基于psutil定时采集系统资源
 
@@ -1976,7 +1976,7 @@ print(response.text)
 response.encoding = 'utf-8'   
 ```
 
-![Snipaste_2026-05-03_15-50-28](pict\Snipaste_2026-05-03_15-50-28.png)
+![Snipaste_2026-05-03_15-50-28](pict/Snipaste_2026-05-03_15-50-28.png)
 
 ##### 4.2、response.content
 
@@ -2126,7 +2126,7 @@ URL地址：
 
 #### 8、post和get区别对比
 
-![Snipaste_2025-10-19_20-06-25](pict\Snipaste_2025-10-19_20-06-25.png)
+![Snipaste_2025-10-19_20-06-25](pict/Snipaste_2025-10-19_20-06-25.png)
 
 #### 企业微信（api）：
 
